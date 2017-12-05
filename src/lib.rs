@@ -326,37 +326,46 @@ macro_rules! __new_table {
 /// 
 #[macro_export]
 macro_rules! merge_tables {
-    (pub struct $name:ident {
-        static $_f:ident: [$tp:ident;$size:tt]
-        = $first:ty { $($flag:ty),* }
-        $(
-            + $next:ty { $($nflag:ty),* }
-        )*;
-    }) => (
+    (
+        $(#[$attr:meta])*
+        pub struct $name:ident {
+            static $_f:ident: [$tp:ident;$size:tt]
+            = $first:ty { $($flag:ty),* }
+            $(
+                + $next:ty { $($nflag:ty),* }
+            )*;
+        }
+    ) => (
         __merge_tables! {
-            table (pub) $name [$tp;$size] = $first [ $($flag),* ] $(, $next [$($nflag),*])*
+            table $(#[$attr])* (pub) $name [$tp;$size] = $first [ $($flag),* ] $(, $next [$($nflag),*])*
         }
     );
-    (pub($($vis:tt)+) struct $name:ident {
-        static $_f:ident: [$tp:ident;$size:tt]
-        = $first:ty { $($flag:ty),* }
-        $(
-            + $next:ty { $($nflag:ty),* }
-        )*;
-    }) => (
+    (
+        $(#[$attr:meta])*
+        pub($($vis:tt)+) struct $name:ident {
+            static $_f:ident: [$tp:ident;$size:tt]
+            = $first:ty { $($flag:ty),* }
+            $(
+                + $next:ty { $($nflag:ty),* }
+            )*;
+        }
+    ) => (
         __merge_tables! {
-            table (pub($($vis)+)) $name [$tp;$size] = $first [ $($flag),* ] $(, $next [$($nflag),*])*
+            table $(#[$attr])* (pub($($vis)+)) $name [$tp;$size] = $first [ $($flag),* ] $(, $next [$($nflag),*])*
         }
     );
-    (struct $name:ident {
-        static $_f:ident: [$tp:ident;$size:tt]
-        = $first:ty { $($flag:ty),* }
-        $(
-            + $next:ty { $($nflag:ty),* }
-        )*;
-    }) => (
+    (
+        $(#[$attr:meta])*
+        struct $name:ident {
+            static $_f:ident: [$tp:ident;$size:tt]
+            = $first:ty { $($flag:ty),* }
+            $(
+                + $next:ty { $($nflag:ty),* }
+            )*;
+        }
+    ) => (
         __merge_tables! {
-            table () $name [$tp;$size] = $first [ $($flag),* ] $(, $next [$($nflag),*])*
+            table $(#[$attr])* () $name [$tp;$size] = $first [ $($flag),* ] $(, $next [$($nflag),*])*
         }
     );
 }
@@ -364,9 +373,10 @@ macro_rules! merge_tables {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __merge_tables {
-    (table ($($vis:tt)*) $name:ident [$tp:ident;$size:tt] = $($ct:ty [$($cf:ty),*]),*) => (
+    (table $(#[$attr:meta])* ($($vis:tt)*) $name:ident [$tp:ident;$size:tt] = $($ct:ty [$($cf:ty),*]),*) => (
 
         #[derive(Copy, Clone)]
+        $(#[$attr])*
         $($vis)* struct $name;
 
         impl $crate::ConstFlagCount for $name {

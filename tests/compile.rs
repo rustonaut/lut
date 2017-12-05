@@ -127,4 +127,11 @@ mod with_attributes {
         }
     }
 
+    merge_tables! {
+        /// da new table
+        struct Table2 {
+            static data: [u8; 2] = Table { F1 };
+        }
+    }
+
 }
