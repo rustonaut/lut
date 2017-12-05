@@ -11,30 +11,30 @@ fn mod_visibility() {
     // macros are public
 }
 
-new_table! {
-    flags [E11, E12, E13, E14],
-    table TableToCheckMacroExpansioWithMoreThanOneOrTwoElements[u8; 4] = [
+__new_table! {
+    (pub) flags [E11, E12, E13, E14],
+    (pub) table TableToCheckMacroExpansioWithMoreThanOneOrTwoElements[u8; 4] = [
         E11, E11, E12, E14
     ]
 }
 
-new_table! {
-    flags [A11, A12],
-    table Tab1[u8; 4] = [
+__new_table! {
+    (pub) flags [A11, A12],
+    (pub) table Tab1[u8; 4] = [
         A11, A11|A12, ,
     ]
 }
 
-new_table! {
-    flags [A21],
-    table Tab2[u8; 4] = [
+__new_table! {
+    (pub) flags [A21],
+    (pub) table Tab2[u8; 4] = [
         A21, , A21,
     ]
 }
 
-new_table! {
-    flags [A31],
-    table Tab3[u8; 4] = [
+__new_table! {
+    (pub) flags [A31],
+    (pub) table Tab3[u8; 4] = [
         A31, , , A31
     ]
 }
@@ -47,7 +47,39 @@ merge_tables! {
     table Tab123[u8; 4] = Tab1 [ A11, A12 ], Tab2 [ A21 ], Tab3 [ A31 ]
 }
 
-accessor_all!{ A11AndA12 = A11 & A12 }
-accessor_any!{ A11OrA21 = A11 | A21 }
+accessor_all!{ pub A11AndA12 = A11 & A12 }
+accessor_any!{ pub A11OrA21 = A11 | A21 }
+
+
+mod compile_pub_flags_priv_table {
+    new_table! {
+        pub flags { F1, F2 }
+        struct Table {
+            static data: [u8; 3] = [
+                F1, F1|F2, F2
+            ]
+        }
+    }
+}
+mod compile_priv_flags_pub_table {
+    new_table! {
+        flags { F1, F2 }
+        pub struct Table {
+            static data: [u8; 3] = [
+                F1, F1|F2, F2
+            ]
+        }
+    }
+}
+mod compile_pubcrate_both {
+    new_table! {
+        pub(crate) flags { F1, F2 }
+        pub(crate) struct Table {
+            static data: [u8; 3] = [
+                F1, F1|F2, F2
+            ]
+        }
+    }
+}
 
 

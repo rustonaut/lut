@@ -76,21 +76,144 @@ impl<H,T> ConstFlagCount for FCSum<H, T>
     const FLAG_COUNT: usize = H::FLAG_COUNT + T::FLAG_COUNT;
 }
 
+// new_table! {
+//     flags { F1, F2, F3 }
+//     struct Table1 {
+//         static data: [u8;4] = [
+//             F1,   ,  F2|F3,      ,
+//             F2, F4,       ,    F5,
+//         ]
+//     }
+// }
+
 #[macro_export]
 macro_rules! new_table {
     (
-        flags [$($fname:ident),*],
-        table $name:ident [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+        pub flags {$($fname:ident),*}
+        pub struct $name:ident {
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+        }
+    ) => (
+        __new_table! {
+            (pub) flags [$($fname),*],
+            (pub) table $name [$tp;$size] = [$($($v)|*),*]
+        }
+    );
+
+    (
+        pub flags {$($fname:ident),*}
+        pub($($vis:tt)+) struct $name:ident {
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+        }
+    ) => (
+        __new_table! {
+            (pub) flags [$($fname),*],
+            (pub($($vis)+)) table $name [$tp;$size] = [$($($v)|*),*]
+        }
+    );
+
+    (
+        pub flags {$($fname:ident),*}
+        struct $name:ident {
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+        }
+    ) => (
+        __new_table! {
+            (pub) flags [$($fname),*],
+            () table $name [$tp;$size] = [$($($v)|*),*]
+        }
+    );
+
+    //----
+
+    (
+        pub($($vis:tt)+) flags {$($fname:ident),*}
+        pub struct $name:ident {
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+        }
+    ) => (
+        __new_table! {
+            (pub($($vis)+)) flags [$($fname),*],
+            (pub) table $name [$tp;$size] = [$($($v)|*),*]
+        }
+    );
+
+    (
+        pub($($fvis:tt)+) flags {$($fname:ident),*}
+        pub($($tvis:tt)+) struct $name:ident {
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+        }
+    ) => (
+        __new_table! {
+            (pub($($fvis)+)) flags [$($fname),*],
+            (pub($($tvis)+)) table $name [$tp;$size] = [$($($v)|*),*]
+        }
+    );
+
+    (
+        pub($($vis:tt)+) flags {$($fname:ident),*}
+        struct $name:ident {
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+        }
+    ) => (
+        __new_table! {
+            (pub($($vis)+)) flags [$($fname),*],
+            () table $name [$tp;$size] = [$($($v)|*),*]
+        }
+    );
+
+    //-------
+    (
+        flags {$($fname:ident),*}
+        pub struct $name:ident {
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+        }
+    ) => (
+        __new_table! {
+            () flags [$($fname),*],
+            (pub) table $name [$tp;$size] = [$($($v)|*),*]
+        }
+    );
+    (
+        flags {$($fname:ident),*}
+        pub($($vis:tt)+) struct $name:ident {
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+        }
+    ) => (
+        __new_table! {
+            () flags [$($fname),*],
+            (pub($($vis)+)) table $name [$tp;$size] = [$($($v)|*),*]
+        }
+    );
+    (
+        flags {$($fname:ident),*}
+        struct $name:ident {
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+        }
+    ) => (
+        __new_table! {
+            () flags [$($fname),*],
+            () table $name [$tp;$size] = [$($($v)|*),*]
+        }
+    );
+
+}
+
+#[macro_export]
+macro_rules! __new_table {
+    (
+        ($($flag_vis:tt)*) flags [$($fname:ident),*],
+        ($($table_vis:tt)*) table $name:ident [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
     ) => (
 
-        new_table!{@DEF_FLAGS $name [$($fname),*] [ ]}
+        __new_table!{@DEF_FLAGS ($($flag_vis)*) $name [$($fname),*] [ ]}
 
 
-        #[derive(Copy, Clone)]
-        pub struct $name;
+        #[derive(Copy, Clone, Debug)]
+        $($table_vis)* struct $name;
 
         impl $crate::ConstFlagCount for $name {
-            const FLAG_COUNT: usize = new_table!{@COUNT [$($fname),*] []};
+            const FLAG_COUNT: usize = __new_table!{@COUNT [$($fname),*] []};
         }
 
         impl $crate::Table for $name {
@@ -115,10 +238,12 @@ macro_rules! new_table {
             }
         }
     );
-    (@DEF_FLAGS $t:ident [] [$($inc:tt)*]) => ();
-    (@DEF_FLAGS $table:ident [$head:ident $(, $tail:ident)*] [$($inc:tt)*]) => (
-        #[derive(Copy,Clone, Debug)]
-        pub struct $head;
+    (@DEF_FLAGS ($($flag_vis:tt)*) $t:ident [] [$($inc:tt)*]) => ();
+    (@DEF_FLAGS ($($flag_vis:tt)*) $table:ident [$head:ident $(, $tail:ident)*] [$($inc:tt)*]) => (
+
+        #[derive(Copy, Clone, Debug)]
+        $($flag_vis)* struct $head;
+
 
         impl $crate::Flag<$table> for $head {
             const BIT_MASK: <$table as $crate::Table>::Value =
@@ -150,13 +275,13 @@ macro_rules! new_table {
             }
         }
 
-        new_table!{@DEF_FLAGS $table [$($tail),*] [$($inc)* 1]}
+        __new_table!{@DEF_FLAGS ($($flag_vis)*) $table [$($tail),*] [$($inc)* 1]}
     );
     (@COUNT [] [$($inc:tt)*]) => (
         $($inc +)* 0;
     );
     (@COUNT [$head:ident $(, $tail:ident)*] [$($inc:tt)*]) => (
-        new_table!{@COUNT [$($tail),*] [$($inc)* 1]}
+        __new_table!{@COUNT [$($tail),*] [$($inc)* 1]}
     );
 }
 
@@ -382,8 +507,24 @@ impl<T> Access<T> for All<T>
 
 #[macro_export]
 macro_rules! accessor_all {
+    (pub $name:ident = $($subname:ident)&+) => (
+        accessor_all!{ @IMPL
+            (pub) $name = $($subname)&+
+        }
+    );
+    (pub($($vis:tt)*) $name:ident = $($subname:ident)&+) => (
+        accessor_all!{ @IMPL
+            (pub($($vis)*)) $name = $($subname)&+
+        }
+    );
     ($name:ident = $($subname:ident)&+) => (
-        pub struct $name;
+        accessor_all!{ @IMPL
+            () $name = $($subname)&+
+        }
+    );
+    (@IMPL ($($vis:tt)*) $name:ident = $($subname:ident)&+) => (
+        #[derive(Copy, Clone, Debug)]
+        $($vis)* struct $name;
         impl<T: $crate::Table> $crate::Access<T> for $name
                   where $($subname: $crate::Flag<T>),*
         {
@@ -398,8 +539,24 @@ macro_rules! accessor_all {
 
 #[macro_export]
 macro_rules! accessor_any {
+    (pub $name:ident = $($subname:ident)|+) => (
+        accessor_any!{ @IMPL
+            (pub) $name = $($subname)|+
+        }
+    );
+    (pub($($vis:tt)*) $name:ident = $($subname:ident)|+) => (
+        accessor_any!{ @IMPL
+            (pub($($vis)*)) $name = $($subname)|+
+        }
+    );
     ($name:ident = $($subname:ident)|+) => (
-        pub struct $name;
+        accessor_any!{ @IMPL
+            () $name = $($subname)|+
+        }
+    );
+    (@IMPL ($($vis:tt)*) $name:ident = $($subname:ident)|+) => (
+        #[derive(Copy, Clone, Debug)]
+        $($vis)* struct $name;
         impl<T: $crate::Table> $crate::Access<T> for $name
                   where $($subname: $crate::Flag<T>),*
         {
@@ -414,38 +571,55 @@ macro_rules! accessor_any {
 
 
 
-
 #[cfg(test)]
 mod test {
     use super::*;
 
+
+//    merge_tables! {
+//        struct Table12 {
+//            = Tab1 { A11, A12 },
+//            + Tab2 { A21 },
+//            + Tab3 { Ra, Ro, Ri }
+//        }
+//    }
+
     new_table! {
-        flags [E11, E12, E13, E14],
-        table TableToCheckMacroExpansioWithMoreThanOneOrTwoElements[u8; 4] = [
-            E11, E11, E12, E14
-        ]
+        flags { E11, E12, E13, E14 }
+        struct TableToCheckMacroExpansioWithMoreThanOneOrTwoElements {
+            static data: [u8; 4] = [
+                E11, E12, E13, E14
+            ]
+        }
     }
 
     new_table! {
-        flags [A11, A12],
-        table Tab1[u8; 4] = [
-            A11, A11|A12, ,
-        ]
+        flags { A11, A12 }
+        struct Tab1 {
+            static data: [u8; 4] = [
+                A11, A11|A12, ,
+            ]
+        }
     }
 
     new_table! {
-        flags [A21],
-        table Tab2[u8; 4] = [
-            A21, , A21,
-        ]
+        flags { A21 }
+        struct Tab2 {
+            static data: [u8; 4] = [
+                A21, , A21,
+            ]
+        }
     }
 
     new_table! {
-        flags [A31],
-        table Tab3[u8; 4] = [
-            A31, , , A31
-        ]
+        flags { A31 }
+        struct Tab3 {
+            static data: [u8; 4] = [
+                A31, , , A31
+            ]
+        }
     }
+
 
     merge_tables! {
         table Tab12[u8;4] = Tab1 [ A11, A12 ], Tab2 [A21]
