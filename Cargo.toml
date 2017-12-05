@@ -9,6 +9,9 @@ documentation = "https://docs.rs/lut"
 repository    = "https://github.com/1aim/lut"
 keywords      = [ "lookup", "tables" ]
 
+[dependencies]
+lazy_static = "0.2"
+
 [badges]
 travis-ci = { repository = "1aim/lut", branch = "master" }
 maintenance = { status = "actively-developed" }
