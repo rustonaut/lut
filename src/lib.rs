@@ -76,16 +76,20 @@ impl<H,T> ConstFlagCount for FCSum<H, T>
     const FLAG_COUNT: usize = H::FLAG_COUNT + T::FLAG_COUNT;
 }
 
-// new_table! {
-//     flags { F1, F2, F3 }
-//     struct Table1 {
-//         static data: [u8;4] = [
-//             F1,   ,  F2|F3,      ,
-//             F2, F4,       ,    F5,
-//         ]
-//     }
-// }
-
+///
+/// # Example
+//```
+//new_table! {
+//    flags { F1, F2, F3 }
+//    struct Table1 {
+//        static data: [u8;4] = [
+//            F1,   ,  F2|F3,      ,
+//            F2, F4,       ,    F5,
+//        ]
+//    }
+//}
+//```
+///
 #[macro_export]
 macro_rules! new_table {
     (
@@ -285,13 +289,62 @@ macro_rules! __new_table {
     );
 }
 
-
+/// # Example
+/// 
+// ```
+// merge_tables! {
+//     struct Table12 {
+//         static data: [u8; 4]
+//             = Tab1 { A11, A12 }
+//             + Tab2 { A21 }
+//             + Tab3 { Ra, Ro, Ri }
+//     }
+// }
+// ```
+/// 
 #[macro_export]
 macro_rules! merge_tables {
-    (table $name:ident [$tp:ident;$size:tt] = $($ct:ident [$($cf:ident),*]),*) => (
+    (pub struct $name:ident {
+        static $_f:ident: [$tp:ident;$size:tt]
+        = $first:ident { $($flag:ident),* }
+        $(
+            + $next:ident { $($nflag:ident),* }
+        )*
+    }) => (
+        __merge_tables! {
+            table (pub) $name [$tp;$size] = $first [ $($flag),* ] $(, $next [$($nflag),*])*
+        }
+    );
+    (pub($($vis:tt)+) struct $name:ident {
+        static $_f:ident: [$tp:ident;$size:tt]
+        = $first:ident { $($flag:ident),* }
+        $(
+            + $next:ident { $($nflag:ident),* }
+        )*
+    }) => (
+        __merge_tables! {
+            table (pub($($vis)+)) $name [$tp;$size] = $first [ $($flag),* ] $(, $next [$($nflag),*])*
+        }
+    );
+    (struct $name:ident {
+        static $_f:ident: [$tp:ident;$size:tt]
+        = $first:ident { $($flag:ident),* }
+        $(
+            + $next:ident { $($nflag:ident),* }
+        )*
+    }) => (
+        __merge_tables! {
+            table () $name [$tp;$size] = $first [ $($flag),* ] $(, $next [$($nflag),*])*
+        }
+    );
+}
+
+#[macro_export]
+macro_rules! __merge_tables {
+    (table ($($vis:tt)*) $name:ident [$tp:ident;$size:tt] = $($ct:ident [$($cf:ident),*]),*) => (
 
         #[derive(Copy, Clone)]
-        pub struct $name;
+        $($vis)* struct $name;
 
         impl $crate::ConstFlagCount for $name {
             const FLAG_COUNT: usize = 0 $(+ <$ct as $crate::ConstFlagCount>::FLAG_COUNT)*;
@@ -311,7 +364,7 @@ macro_rules! merge_tables {
                     static ref TABLE: [$tp;$size] = {
                         let mut res = [$tp::default();$size];
                         for (idx, field) in res.iter_mut().enumerate() {
-                            merge_tables!{ @MERGE_ITER_STEP
+                            __merge_tables!{ @MERGE_ITER_STEP
                                 $tp, idx, field, $name,
                                 $crate::FCSum<(), ()>,
                                 [$($ct [$($cf)*])*]
@@ -330,7 +383,7 @@ macro_rules! merge_tables {
         }
 
 
-        merge_tables! {@MERGE_FLAG_IMPL
+        __merge_tables! {@MERGE_FLAG_IMPL
             $name, $tp, $name,
             $crate::FCSum<(),()>,
             [ $($ct [$($cf)*])* ] }
@@ -358,7 +411,7 @@ macro_rules! merge_tables {
                 }
             }
         )*
-        merge_tables!{ @MERGE_FLAG_IMPL
+        __merge_tables!{ @MERGE_FLAG_IMPL
             $new_table, $tp, $fc_total,
             $crate::FCSum<$current_table, $fc_prev>,
             [ $($tail_t [ $($tail_f)* ])* ] }
@@ -377,7 +430,7 @@ macro_rules! merge_tables {
                 ) as $tp;
             }
         )*}
-        merge_tables! { @MERGE_ITER_STEP
+        __merge_tables! { @MERGE_ITER_STEP
             $tp, $idx, $field, $total_fc,
             $crate::FCSum<$current_table, $fc_prev>,
             [$($tail_t [$($tail_f)*])*]
@@ -575,15 +628,6 @@ macro_rules! accessor_any {
 mod test {
     use super::*;
 
-
-//    merge_tables! {
-//        struct Table12 {
-//            = Tab1 { A11, A12 },
-//            + Tab2 { A21 },
-//            + Tab3 { Ra, Ro, Ri }
-//        }
-//    }
-
     new_table! {
         flags { E11, E12, E13, E14 }
         struct TableToCheckMacroExpansioWithMoreThanOneOrTwoElements {
@@ -622,11 +666,20 @@ mod test {
 
 
     merge_tables! {
-        table Tab12[u8;4] = Tab1 [ A11, A12 ], Tab2 [A21]
+        struct Tab12 {
+            static data: [u8; 4]
+                = Tab1 { A11, A12 }
+                + Tab2 { A21 }
+        }
     }
 
     merge_tables! {
-        table Tab123[u8; 4] = Tab1 [ A11, A12 ], Tab2 [ A21 ], Tab3 [ A31 ]
+        struct Tab123 {
+            static data: [u8; 4]
+                = Tab1 { A11, A12 }
+                + Tab2 { A21 }
+                + Tab3 { A31 }
+        }
     }
 
     accessor_all!{ A11AndA12 = A11 & A12 }
