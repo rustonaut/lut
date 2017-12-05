@@ -97,7 +97,7 @@ macro_rules! new_table {
     (
         pub flags {$($fname:ident),*}
         pub struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -109,7 +109,7 @@ macro_rules! new_table {
     (
         pub flags {$($fname:ident),*}
         pub($($vis:tt)+) struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -121,7 +121,7 @@ macro_rules! new_table {
     (
         pub flags {$($fname:ident),*}
         struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -135,7 +135,7 @@ macro_rules! new_table {
     (
         pub($($vis:tt)+) flags {$($fname:ident),*}
         pub struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -147,7 +147,7 @@ macro_rules! new_table {
     (
         pub($($fvis:tt)+) flags {$($fname:ident),*}
         pub($($tvis:tt)+) struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -159,7 +159,7 @@ macro_rules! new_table {
     (
         pub($($vis:tt)+) flags {$($fname:ident),*}
         struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -172,7 +172,7 @@ macro_rules! new_table {
     (
         flags {$($fname:ident),*}
         pub struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -183,7 +183,7 @@ macro_rules! new_table {
     (
         flags {$($fname:ident),*}
         pub($($vis:tt)+) struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -194,7 +194,7 @@ macro_rules! new_table {
     (
         flags {$($fname:ident),*}
         struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -316,7 +316,7 @@ macro_rules! merge_tables {
         = $first:ty { $($flag:ty),* }
         $(
             + $next:ty { $($nflag:ty),* }
-        )*
+        )*;
     }) => (
         __merge_tables! {
             table (pub) $name [$tp;$size] = $first [ $($flag),* ] $(, $next [$($nflag),*])*
@@ -327,7 +327,7 @@ macro_rules! merge_tables {
         = $first:ty { $($flag:ty),* }
         $(
             + $next:ty { $($nflag:ty),* }
-        )*
+        )*;
     }) => (
         __merge_tables! {
             table (pub($($vis)+)) $name [$tp;$size] = $first [ $($flag),* ] $(, $next [$($nflag),*])*
@@ -338,7 +338,7 @@ macro_rules! merge_tables {
         = $first:ty { $($flag:ty),* }
         $(
             + $next:ty { $($nflag:ty),* }
-        )*
+        )*;
     }) => (
         __merge_tables! {
             table () $name [$tp;$size] = $first [ $($flag),* ] $(, $next [$($nflag),*])*
@@ -645,7 +645,7 @@ mod test {
         struct TableToCheckMacroExpansioWithMoreThanOneOrTwoElements {
             static data: [u8; 4] = [
                 E11, E12, E13, E14
-            ]
+            ];
         }
     }
 
@@ -654,7 +654,7 @@ mod test {
         struct Tab1 {
             static data: [u8; 4] = [
                 A11, A11|A12, ,
-            ]
+            ];
         }
     }
 
@@ -663,7 +663,7 @@ mod test {
         struct Tab2 {
             static data: [u8; 4] = [
                 A21, , A21,
-            ]
+            ];
         }
     }
 
@@ -672,7 +672,7 @@ mod test {
         struct Tab3 {
             static data: [u8; 4] = [
                 A31, , , A31
-            ]
+            ];
         }
     }
 
@@ -681,7 +681,7 @@ mod test {
         struct Tab12 {
             static data: [u8; 4]
                 = Tab1 { A11, A12 }
-                + Tab2 { A21 }
+                + Tab2 { A21 };
         }
     }
 
@@ -690,7 +690,7 @@ mod test {
             static data: [u8; 4]
                 = Tab1 { A11, A12 }
                 + Tab2 { A21 }
-                + Tab3 { A31 }
+                + Tab3 { A31 };
         }
     }
 
