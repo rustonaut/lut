@@ -98,7 +98,7 @@ macro_rules! new_table {
         pub flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -111,7 +111,7 @@ macro_rules! new_table {
         pub flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub($($vis:tt)+) struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -124,7 +124,7 @@ macro_rules! new_table {
         pub flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -139,7 +139,7 @@ macro_rules! new_table {
         pub($($vis:tt)+) flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -152,7 +152,7 @@ macro_rules! new_table {
         pub($($fvis:tt)+) flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub($($tvis:tt)+) struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -165,7 +165,7 @@ macro_rules! new_table {
         pub($($vis:tt)+) flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -179,7 +179,7 @@ macro_rules! new_table {
         flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -191,7 +191,7 @@ macro_rules! new_table {
         flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub($($vis:tt)+) struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -203,7 +203,7 @@ macro_rules! new_table {
         flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
@@ -219,7 +219,7 @@ macro_rules! new_table {
 macro_rules! __new_table {
     (
         ($($flag_vis:tt)*) flags [$($(#[$fattr:meta])* $fname:ident),*],
-        ($($table_vis:tt)*) table $(#[$attr:meta])* $name:ident [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
+        ($($table_vis:tt)*) table $(#[$attr:meta])* $name:ident [$tp:ty;$size:tt] = [$($($v:ident)|*),*]
     ) => (
 
         __new_table!{@DEF_FLAGS ($($flag_vis)*) $name [$($(#[$fattr])* $fname),*] [ ]}
@@ -329,7 +329,7 @@ macro_rules! merge_tables {
     (
         $(#[$attr:meta])*
         pub struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt]
+            static $_f:ident: [$tp:ty;$size:tt]
             = $first:ty { $($flag:ty),* }
             $(
                 + $next:ty { $($nflag:ty),* }
@@ -343,7 +343,7 @@ macro_rules! merge_tables {
     (
         $(#[$attr:meta])*
         pub($($vis:tt)+) struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt]
+            static $_f:ident: [$tp:ty;$size:tt]
             = $first:ty { $($flag:ty),* }
             $(
                 + $next:ty { $($nflag:ty),* }
@@ -357,7 +357,7 @@ macro_rules! merge_tables {
     (
         $(#[$attr:meta])*
         struct $name:ident {
-            static $_f:ident: [$tp:ident;$size:tt]
+            static $_f:ident: [$tp:ty;$size:tt]
             = $first:ty { $($flag:ty),* }
             $(
                 + $next:ty { $($nflag:ty),* }
@@ -373,7 +373,7 @@ macro_rules! merge_tables {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __merge_tables {
-    (table $(#[$attr:meta])* ($($vis:tt)*) $name:ident [$tp:ident;$size:tt] = $($ct:ty [$($cf:ty),*]),*) => (
+    (table $(#[$attr:meta])* ($($vis:tt)*) $name:ident [$tp:ty;$size:tt] = $($ct:ty [$($cf:ty),*]),*) => (
 
         #[derive(Copy, Clone)]
         $(#[$attr])*
@@ -395,7 +395,7 @@ macro_rules! __merge_tables {
             fn lookup(idx: usize) -> Self::Value {
                 lazy_static! {
                     static ref TABLE: [$tp;$size] = {
-                        let mut res = [$tp::default();$size];
+                        let mut res = [<$tp as Default>::default();$size];
                         for (idx, field) in res.iter_mut().enumerate() {
                             __merge_tables!{ @MERGE_ITER_STEP
                                 $tp, idx, field, $name,
@@ -426,8 +426,8 @@ macro_rules! __merge_tables {
             $crate::FCSum<(),()>,
             [ $($ct [$($cf)*])* ] }
     );
-    ( @MERGE_FLAG_IMPL $new_table:ident, $tp:ident, $fc_total:ident, $fc_prev:ty, []) => ();
-    ( @MERGE_FLAG_IMPL $new_table:ident, $tp:ident, $fc_total:ident,
+    ( @MERGE_FLAG_IMPL $new_table:ident, $tp:ty, $fc_total:ident, $fc_prev:ty, []) => ();
+    ( @MERGE_FLAG_IMPL $new_table:ident, $tp:ty, $fc_total:ident,
         $fc_prev:ty,
         [ $current_table:ty [ $($current_flag:ty)* ] $($tail_t:ty [$($tail_f:ty)*])* ]
     ) => (
@@ -454,8 +454,8 @@ macro_rules! __merge_tables {
             $crate::FCSum<$current_table, $fc_prev>,
             [ $($tail_t [ $($tail_f)* ])* ] }
     );
-    ( @MERGE_ITER_STEP $tp:ident, $idx:ident, $field:ident, $total_fc:ident, $fc_prev:ty, []) => ();
-    ( @MERGE_ITER_STEP $tp:ident, $idx:ident, $field:ident, $total_fc:ident,
+    ( @MERGE_ITER_STEP $tp:ty, $idx:ident, $field:ident, $total_fc:ident, $fc_prev:ty, []) => ();
+    ( @MERGE_ITER_STEP $tp:ty, $idx:ident, $field:ident, $total_fc:ident,
         $fc_prev:ty,
         [ $current_table:ty [ $($current_flag:ty)* ] $($tail_t:ty [$($tail_f:ty)*])* ]
     ) => (
