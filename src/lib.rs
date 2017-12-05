@@ -95,40 +95,40 @@ impl<H,T> ConstFlagCount for FCSum<H, T>
 #[macro_export]
 macro_rules! new_table {
     (
-        pub flags {$($fname:ident),*}
+        pub flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub struct $name:ident {
             static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
-            (pub) flags [$($fname),*],
+            (pub) flags [$( $(#[$fattr])* $fname ),*],
             (pub) table $(#[$attr])* $name [$tp;$size] = [$($($v)|*),*]
         }
     );
 
     (
-        pub flags {$($fname:ident),*}
+        pub flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub($($vis:tt)+) struct $name:ident {
             static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
-            (pub) flags [$($fname),*],
+            (pub) flags [$( $(#[$fattr])* $fname ),*],
             (pub($($vis)+)) table $(#[$attr])* $name [$tp;$size] = [$($($v)|*),*]
         }
     );
 
     (
-        pub flags {$($fname:ident),*}
+        pub flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         struct $name:ident {
             static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
-            (pub) flags [$($fname),*],
+            (pub) flags [$( $(#[$fattr])* $fname ),*],
             () table $(#[$attr])* $name [$tp;$size] = [$($($v)|*),*]
         }
     );
@@ -136,78 +136,78 @@ macro_rules! new_table {
     //----
 
     (
-        pub($($vis:tt)+) flags {$($fname:ident),*}
+        pub($($vis:tt)+) flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub struct $name:ident {
             static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
-            (pub($($vis)+)) flags [$($fname),*],
+            (pub($($vis)+)) flags [$( $(#[$fattr])* $fname ),*],
             (pub) table $(#[$attr])* $name [$tp;$size] = [$($($v)|*),*]
         }
     );
 
     (
-        pub($($fvis:tt)+) flags {$($fname:ident),*}
+        pub($($fvis:tt)+) flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub($($tvis:tt)+) struct $name:ident {
             static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
-            (pub($($fvis)+)) flags [$($fname),*],
+            (pub($($fvis)+)) flags [$( $(#[$fattr])* $fname ),*],
             (pub($($tvis)+)) table $(#[$attr])* $name [$tp;$size] = [$($($v)|*),*]
         }
     );
 
     (
-        pub($($vis:tt)+) flags {$($fname:ident),*}
+        pub($($vis:tt)+) flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         struct $name:ident {
             static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
-            (pub($($vis)+)) flags [$($fname),*],
+            (pub($($vis)+)) flags [$( $(#[$fattr])* $fname ),*],
             () table $(#[$attr])* $name [$tp;$size] = [$($($v)|*),*]
         }
     );
 
     //-------
     (
-        flags {$($fname:ident),*}
+        flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub struct $name:ident {
             static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
-            () flags [$($fname),*],
+            () flags [$( $(#[$fattr])* $fname ),*],
             (pub) table $(#[$attr])* $name [$tp;$size] = [$($($v)|*),*]
         }
     );
     (
-        flags {$($fname:ident),*}
+        flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub($($vis:tt)+) struct $name:ident {
             static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
-            () flags [$($fname),*],
+            () flags [$( $(#[$fattr])* $fname ),*],
             (pub($($vis)+)) table $(#[$attr])* $name [$tp;$size] = [$($($v)|*),*]
         }
     );
     (
-        flags {$($fname:ident),*}
+        flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         struct $name:ident {
             static $_f:ident: [$tp:ident;$size:tt] = [$($($v:ident)|*),*];
         }
     ) => (
         __new_table! {
-            () flags [$($fname),*],
+            () flags [$( $(#[$fattr])* $fname ),*],
             () table $(#[$attr])* $name [$tp;$size] = [$($($v)|*),*]
         }
     );
@@ -218,11 +218,11 @@ macro_rules! new_table {
 #[macro_export]
 macro_rules! __new_table {
     (
-        ($($flag_vis:tt)*) flags [$($fname:ident),*],
+        ($($flag_vis:tt)*) flags [$($(#[$fattr:meta])* $fname:ident),*],
         ($($table_vis:tt)*) table $(#[$attr:meta])* $name:ident [$tp:ident;$size:tt] = [$($($v:ident)|*),*]
     ) => (
 
-        __new_table!{@DEF_FLAGS ($($flag_vis)*) $name [$($fname),*] [ ]}
+        __new_table!{@DEF_FLAGS ($($flag_vis)*) $name [$($(#[$fattr])* $fname),*] [ ]}
 
 
         #[derive(Copy, Clone, Debug)]
@@ -261,9 +261,13 @@ macro_rules! __new_table {
         }
     );
     (@DEF_FLAGS ($($flag_vis:tt)*) $t:ident [] [$($inc:tt)*]) => ();
-    (@DEF_FLAGS ($($flag_vis:tt)*) $table:ident [$head:ident $(, $tail:ident)*] [$($inc:tt)*]) => (
+    (@DEF_FLAGS ($($flag_vis:tt)*) $table:ident
+        [ $(#[$hattr:meta])* $head:ident $(, $(#[$tattr:meta])* $tail:ident)*]
+        [$($inc:tt)*]
+    ) => (
 
         #[derive(Copy, Clone, Debug)]
+        $(#[$hattr])*
         $($flag_vis)* struct $head;
 
 
