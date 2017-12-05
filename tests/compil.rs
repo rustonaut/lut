@@ -109,3 +109,16 @@ mod compile_relative_path_merge {
         }
     }
 }
+
+
+mod with_attributes {
+
+    new_table! {
+        //a doc-comment is a attribute, too ;=)
+        flags { F1, F2 }
+        /// documented
+        struct Table {
+            static data: [u8; 2] = [ F1, F2 ];
+        }
+    }
+}
