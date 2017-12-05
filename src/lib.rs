@@ -55,6 +55,8 @@ pub trait Table: Sized + ConstFlagCount {
     fn lookup(idx: usize) -> Self::Value;
 
     fn check_at<A: Access<Self>>(idx: usize, accessor: A) -> bool;
+
+    fn check_flag_at<A: Flag<Self>>(idx: usize) -> bool;
 }
 
 pub trait Flag<T: Table>: Access<T> {
@@ -240,6 +242,11 @@ macro_rules! __new_table {
             fn check_at<A: $crate::Access<Self>>(idx: usize, accessor: A) -> bool {
                 accessor.check(Self::lookup(idx))
             }
+
+            #[inline(always)]
+            fn check_flag_at<A: $crate::Flag<Self>>(idx: usize) -> bool {
+                Self::lookup(idx) & A::BIT_MASK != <Self::Value as $crate::TableValue>::ZERO
+            }
         }
     );
     (@DEF_FLAGS ($($flag_vis:tt)*) $t:ident [] [$($inc:tt)*]) => ();
@@ -306,9 +313,9 @@ macro_rules! __new_table {
 macro_rules! merge_tables {
     (pub struct $name:ident {
         static $_f:ident: [$tp:ident;$size:tt]
-        = $first:ident { $($flag:ident),* }
+        = $first:ty { $($flag:ty),* }
         $(
-            + $next:ident { $($nflag:ident),* }
+            + $next:ty { $($nflag:ty),* }
         )*
     }) => (
         __merge_tables! {
@@ -317,9 +324,9 @@ macro_rules! merge_tables {
     );
     (pub($($vis:tt)+) struct $name:ident {
         static $_f:ident: [$tp:ident;$size:tt]
-        = $first:ident { $($flag:ident),* }
+        = $first:ty { $($flag:ty),* }
         $(
-            + $next:ident { $($nflag:ident),* }
+            + $next:ty { $($nflag:ty),* }
         )*
     }) => (
         __merge_tables! {
@@ -328,9 +335,9 @@ macro_rules! merge_tables {
     );
     (struct $name:ident {
         static $_f:ident: [$tp:ident;$size:tt]
-        = $first:ident { $($flag:ident),* }
+        = $first:ty { $($flag:ty),* }
         $(
-            + $next:ident { $($nflag:ident),* }
+            + $next:ty { $($nflag:ty),* }
         )*
     }) => (
         __merge_tables! {
@@ -341,7 +348,7 @@ macro_rules! merge_tables {
 
 #[macro_export]
 macro_rules! __merge_tables {
-    (table ($($vis:tt)*) $name:ident [$tp:ident;$size:tt] = $($ct:ident [$($cf:ident),*]),*) => (
+    (table ($($vis:tt)*) $name:ident [$tp:ident;$size:tt] = $($ct:ty [$($cf:ty),*]),*) => (
 
         #[derive(Copy, Clone)]
         $($vis)* struct $name;
@@ -380,6 +387,11 @@ macro_rules! __merge_tables {
             fn check_at<A: $crate::Access<Self>>(idx: usize, accessor: A) -> bool {
                 accessor.check(Self::lookup(idx))
             }
+
+            #[inline(always)]
+            fn check_flag_at<A: $crate::Flag<Self>>(idx: usize) -> bool {
+                Self::lookup(idx) & A::BIT_MASK != <Self::Value as $crate::TableValue>::ZERO
+            }
         }
 
 
@@ -391,7 +403,7 @@ macro_rules! __merge_tables {
     ( @MERGE_FLAG_IMPL $new_table:ident, $tp:ident, $fc_total:ident, $fc_prev:ty, []) => ();
     ( @MERGE_FLAG_IMPL $new_table:ident, $tp:ident, $fc_total:ident,
         $fc_prev:ty,
-        [ $current_table:ident [ $($current_flag:ident)* ] $($tail_t:ident [$($tail_f:ident)*])* ]
+        [ $current_table:ty [ $($current_flag:ty)* ] $($tail_t:ty [$($tail_f:ty)*])* ]
     ) => (
         //  $fc_prev = FCSum<$current, $prev_count>
         //           = FCSum<Table1, FCSum<Table2,
@@ -419,10 +431,10 @@ macro_rules! __merge_tables {
     ( @MERGE_ITER_STEP $tp:ident, $idx:ident, $field:ident, $total_fc:ident, $fc_prev:ty, []) => ();
     ( @MERGE_ITER_STEP $tp:ident, $idx:ident, $field:ident, $total_fc:ident,
         $fc_prev:ty,
-        [ $current_table:ident [ $($current_flag:ident)* ] $($tail_t:ident [$($tail_f:ident)*])* ]
+        [ $current_table:ty [ $($current_flag:ty)* ] $($tail_t:ty [$($tail_f:ty)*])* ]
     ) => (
         {$(
-            if <$current_table as $crate::Table>::check_at($idx, $current_flag) {
+            if <$current_table as $crate::Table>::check_flag_at::<$current_flag>($idx) {
                 *$field = *$field | (
                     <$current_flag as $crate::Flag<$current_table>>::BIT_MASK
                     << (<$total_fc as $crate::ConstFlagCount>::FLAG_COUNT

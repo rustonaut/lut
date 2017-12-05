@@ -4,7 +4,7 @@ extern crate lut;
 extern crate lazy_static;
 
 #[test]
-fn mod_visibility() {
+fn compile_only_tests() {
     // if this mod compiles the test if successful
     // it's meant to check that all parts in the macros
     // use the `$crate::` prefix, and all thinks by the
@@ -21,8 +21,8 @@ new_table! {
 }
 
 new_table! {
-    flags { A11, A12 }
-    struct Tab1 {
+    pub flags { A11, A12 }
+    pub struct Tab1 {
         static data: [u8; 4] = [
             A11, A11|A12, ,
         ]
@@ -82,4 +82,30 @@ mod compile_pubcrate_both {
     }
 }
 
+mod compile_relative_path_merge {
+    use super::{A11, A12};
+    use super::compile_pubcrate_both::{F1, F2};
 
+    merge_tables! {
+        struct Table {
+            static data: [u8; 4]
+                = super::Tab1 { A11, A12 }
+                + super::compile_pubcrate_both::Table { F1, F2 }
+        }
+    }
+
+    merge_tables! {
+        pub struct TableX {
+            static data: [u8; 4]
+                = super::Tab1 { A11, A12 }
+
+        }
+    }
+
+    merge_tables! {
+        pub(crate) struct TableQ {
+            static data: [u8; 4]
+                = super::Tab1 { A11, A12 }
+        }
+    }
+}
