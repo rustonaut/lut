@@ -273,7 +273,7 @@ macro_rules! __new_table {
 
         impl $crate::Flag<$table> for $head {
             const BIT_MASK: <$table as $crate::Table>::Value =
-                (1 << (0 $(+ $inc)*)) as <$table as $crate::Table>::Value;
+                (1 << (0 $(+ $inc)*)); // as <$table as $crate::Table>::Value;
         }
 
         impl $crate::Access<$table> for $head {
@@ -437,7 +437,12 @@ macro_rules! __merge_tables {
         $(
             impl $crate::Flag<$new_table> for $current_flag {
                 const BIT_MASK: $tp =
-                    <$current_flag as $crate::Flag<$current_table>>::BIT_MASK
+                    //FIXME we need a `as $tp` to go from u8->u16 etc. but sadly it
+                    // also allows the other way around u16-u8
+                    // we might be able to do some tricks with having a nop bit shift (which is optimized
+                    // out) which is larger, as a >8 for u8, ... bit shift _does fail at compiler time_
+                    // just when we shift less but our mask is bigger it hits
+                    (<$current_flag as $crate::Flag<$current_table>>::BIT_MASK as $tp)
                     << (<$fc_total as $crate::ConstFlagCount>::FLAG_COUNT
                         - <$crate::FCSum<$current_table, $fc_prev> as $crate::ConstFlagCount>::FLAG_COUNT);
             }
@@ -824,15 +829,71 @@ mod test {
         assert!(!Tab12::check_at(2, acc));
         assert!(!Tab12::check_at(3, acc));
     }
-    //    merge_tables! {
-    //        mod t12p table Tab12p[u8;256] = Tab1 [ A11 ], Tab2 [A21]
-    //    }
 
-    //    #[test]
-    //    fn merge_tab1_with_tab2_partial() {
-    //        assert_eq!(Tab12p::mask(A11), 1 << 0 + 1);
-    //        //<- is not implemented ;=)
-    //        //assert_eq!(Tab12p.mask(A12), 1 << 1 + 1);
-    //        assert_eq!(Tab12p::mask(A21), 1 << 0);
-    //    }
+    mod merge_into_bigger_cell_type {
+        new_table! {
+            flags { F1, F2, F3, F4, F5 }
+            struct Table1 {
+                static data: [u8; 3] = [F1, F2|F3, F4|F5];
+            }
+        }
+
+        new_table! {
+            flags { E1, E2, E3, E4, E5 }
+            struct Table2 {
+                static data: [u8; 3] = [E1|E2, E1, E3|E4|E5];
+            }
+        }
+
+        merge_tables! {
+            struct Table3 {
+                static data: [u16; 3]
+                    = Table1 { F1, F2, F3, F4, F5 }
+                    + Table2 { E1, E2, E3, E4, E5 };
+            }
+        }
+
+        #[test]
+        fn to_larger_merge_was_succesfull() {
+            use ::Table;
+            assert_eq!(Table3::mask(F1), 1 << 0 + 5);
+            assert_eq!(Table3::mask(F2), 1 << 1 + 5);
+            assert_eq!(Table3::mask(F3), 1 << 2 + 5);
+            assert_eq!(Table3::mask(F4), 1 << 3 + 5);
+            assert_eq!(Table3::mask(F5), 1 << 4 + 5);
+            assert_eq!(Table3::mask(E1), 1 << 0 + 0);
+            assert_eq!(Table3::mask(E2), 1 << 1 + 0);
+            assert_eq!(Table3::mask(E3), 1 << 2 + 0);
+            assert_eq!(Table3::mask(E4), 1 << 3 + 0);
+            assert_eq!(Table3::mask(E5), 1 << 4 + 0);
+        }
+    }
+
+    mod merge_into_smaller {
+
+        new_table! {
+            flags { E1, E2, E3, E4, E5, E6, E7, E8, E9 }
+            struct Table2 {
+                static data: [u16; 3] = [E1|E2, E6|E7|E8|E9 , E3|E4|E5];
+            }
+        }
+
+
+        //FIXME: does not compile but should not...
+        // The all indices etc. are found at compiler time, so the compiler does
+        // know that E9 exceeds u8, it just kinda does not check this as there
+        // is nothing like a "compiler-time safe numcast as"...
+        merge_tables! {
+            struct Table2v2 {
+                static data: [u8; 3] = Table2 { E1, E2, E3, E4, E5, E6, E7, E8, E9 };
+            }
+        }
+
+        merge_tables! {
+            struct Table2v3 {
+                static data: [u8; 3] = Table2 { E1, E2 };
+            }
+        }
+    }
+
 }

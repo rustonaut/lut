@@ -135,3 +135,47 @@ mod with_attributes {
     }
 
 }
+
+mod handling_of_unexpected_cases {
+
+//  This should not compile (and if not broken at some
+//  point doesn't)
+//
+//  new_table! {
+//      flags { F1, F2, F3, F4, F5, F6, F7, F8, F9 }
+//      /// this has more flags than it can handle
+//      struct Table0 {
+//          static data: [u8; 1] = [ F9 ];
+//      }
+//  }
+
+    new_table! {
+        flags {}
+        /// a table without flags
+        struct Table1 {
+            static data: [u8; 2] = [,];
+        }
+    }
+
+    //[BAD] DOES NOT COMPILE, error: ambiguity: multiple successful parses
+    // but it's ok, empty tables are kinda pointless
+//    new_table! {
+//        flags {}
+//        /// a zero-sized table
+//        struct Table2 {
+//            static data: [u8; 0] = [];
+//        }
+//    }
+
+    //[BAD] DOES NOT COMPILE, error: ambiguity: multiple successful parses
+    // but it's ok, empty tables are kinda pointless
+//    new_table! {
+//        flags { F1 }
+//        /// A table with a single zero cell
+//        struct Table3 {
+//            static data: [u8; 1] = [ ];
+//        }
+//    }
+
+
+}
