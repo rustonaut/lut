@@ -6,8 +6,5 @@ extern crate lazy_static;
 mod _impl;
 pub use _impl::*;
 
-<<<<<<< Updated upstream
-=======
 mod tables;
 pub use tables::*;
->>>>>>> Stashed changes

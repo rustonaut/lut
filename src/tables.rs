@@ -1,6 +1,23 @@
+//! This module contains a number of lookup tables.
+//!
+//! Any of this lookup tables can be enabled by a feature. The additive property of
+//! rust features has the effect, that if multiple crates require (a semver compatible
+//! version of) lut the compiler will include only one instance of lut into the binary
+//! with all features enabled which are enabled in any of the crates. As such any
+//! lookup table will should only appear one time in the resulting binary.
+//!
+//! The benefit of having a collection of "generalish" lookup tables in on crate is that:
+//!
+//! 1. crates can share the same tables, even if they e.g. implement different parser algorithm
+//!    decresing developer overhead and code size (if they are used in the same binary)
+//! 2. developers have a place where they can look for them improving discoverability
 
-#[cfg(feature="media-type-chars")]
-new_table! {
+/// a lookup table for parsing/validating Media Types (also know as MIME-Types)
+///
+/// To use lookup the table compile the crate with the `media-type-chars` feature enabled,
+/// else wise this module will be empty.
+mod media_type_chars { #[cfg(feature = "media-type-chars")] new_table! {
+
     pub flags {
         /// ObsNoWsCtl
         ObsNoWsCtl = NC,
@@ -10,58 +27,75 @@ new_table! {
         Token = TO,
         /// Restricted Token
         RestrictedToken = RT,
-        /// AText
-        AText = AT,
-        /// Dtext
-        DText = DT,
         /// CText
         CText = CT,
-        /// QTextWs
-        QText = QC
+        /// QText
+        QText = QC,
+        /// OtherObsQP  obs-quoted-pair chars not in other classes (\0, \r, \n)
+        OtherObsQP = OOQP,
+        /// Ws  (\t and \r)
+        Ws = Ws
     }
+
+    ///
     pub struct MediaTypeChars {
-        static data: [u8; 128] = [
+        static data: [u8; 256] = [
             //0x00 + 0/4/8/C
-            -,                    NC,                   NC,                   NC,
-            NC,                   NC,                   NC,                   NC,
-            NC,                   CT|DT|QC,             -,                    NC,
-            NC,                   -,                    NC,                   NC,
+            OOQP,            NC,              NC,              NC,
+            NC,              NC,              NC,              NC,
+            NC,              Ws,              OOQP,            NC,
+            NC,              OOQP,            NC,              NC,
             //0x10  + 0/4/8/C
-            NC,                   NC,                   NC,                   NC,
-            NC,                   NC,                   NC,                   NC,
-            NC,                   NC,                   NC,                   NC,
-            NC,                   NC,                   NC,                   NC,
+            NC,              NC,              NC,              NC,
+            NC,              NC,              NC,              NC,
+            NC,              NC,              NC,              NC,
+            NC,              NC,              NC,              NC,
             //0x20 + 0/4/8/C
-            CT|DT|QC,             CT|DT|AT|QC|RT|TO|HT, CT|DT,                CT|DT|AT|QC|RT|TO|HT,
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|TO|HT,    CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|TO|HT,
-            DT|QC,                DT|QC,                CT|DT|AT|QC|TO|HT,    CT|DT|AT|QC|RT|TO|HT,
-            CT|DT|QC,             CT|DT|AT|QC|RT|TO|HT, CT|DT|QC|RT|TO|HT,    CT|DT|AT|QC,
+            Ws,              CT|QC|RT|TO|HT,  CT,              CT|QC|RT|TO|HT,
+            CT|QC|RT|TO|HT,  CT|QC|TO|HT,     CT|QC|RT|TO|HT,  CT|QC|TO|HT,
+            QC,              QC,              CT|QC|TO|HT,     CT|QC|RT|TO|HT,
+            CT|QC,           CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC,
             //0x30+ 0/4/8/C
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|QC,             CT|DT|QC,
-            CT|DT|QC,             CT|DT|AT|QC,          CT|DT|QC,             CT|DT|AT|QC,
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC,           CT|QC,
+            CT|QC,           CT|QC,           CT|QC,           CT|QC,
             //0x40+ 0/4/8/C
-            CT|DT|QC,             CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
+            CT|QC,           CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
             //0x50 + 0/4/8/C
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|QC,
-            -,                    CT|QC,                CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC,
+            -,/*'\\'*/       CT|QC,           CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
             //0x60 + 0/4/8/C
-            CT|DT|AT|QC|TO|HT,    CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
+            CT|QC|TO|HT,     CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
             //0x70 + 0/4/8/C
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT,
-            CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|RT|TO|HT, CT|DT|AT|QC|TO,
-            CT|DT|AT|QC|TO|HT,    CT|DT|AT|QC|TO,       CT|DT|AT|QC|TO|HT,    NC
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
+            CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|TO,
+            CT|QC|TO|HT,     CT|QC|TO,        CT|QC|TO|HT,     NC,
             //0x80
+            -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+            //0x90
+            -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+            //0xA0
+            -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+            //0xB0
+            -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+            //0xC0
+            -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+            //0xD0
+            -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+            //0xE0
+            -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -,
+            //0xF0
+            -, -, -, -, -, -, -, -, -, -, -, -, -, -, -, -
         ];
     }
-}
+}}
