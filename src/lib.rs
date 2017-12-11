@@ -78,6 +78,18 @@ impl<H,T> ConstFlagCount for FCSum<H, T>
     const FLAG_COUNT: usize = H::FLAG_COUNT + T::FLAG_COUNT;
 }
 
+
+#[derive(Copy, Clone, Debug)]
+pub struct NoFlagsSet;
+impl<T> Access<T> for NoFlagsSet
+    where T: Table
+{
+    #[inline(always)]
+    fn check(&self, value: T::Value) -> bool {
+        value == T::Value::ZERO
+    }
+}
+
 ///
 /// # Example
 //```
