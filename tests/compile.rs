@@ -12,28 +12,28 @@ fn compile_only_tests() {
 }
 
 new_table! {
-    flags { E11, E12, E13, E14 }
+    flags { E11=E1, E12=E2, E13=E3, E14=E4 }
     struct TableToCheckMacroExpansioWithMoreThanOneOrTwoElements {
         static data: [u8; 4] = [
-            E11, E11, E12, E14
+            E1, E3, E2, E4
         ];
     }
 }
 
 new_table! {
-    pub flags { A11, A12 }
+    pub flags { A11=A1, A12=A2 }
     pub struct Tab1 {
         static data: [u8; 4] = [
-            A11, A11|A12, -, -
+            A1, A1|A2, -, -
         ];
     }
 }
 
 new_table! {
-    flags { A21 }
+    flags { A21=X }
     struct Tab2 {
         static data: [u8; 4] = [
-            A21, -, A21, -
+            X, -, X, -
         ];
     }
 }
@@ -53,7 +53,7 @@ accessor_any!{ A11OrA21 = A11 | A21 }
 
 mod compile_pub_flags_priv_table {
     new_table! {
-        pub flags { F1, F2 }
+        pub flags { F1=F1, F2=F2 }
         struct Table {
             static data: [u8; 3] = [
                 F1, F1|F2, F2
@@ -63,7 +63,7 @@ mod compile_pub_flags_priv_table {
 }
 mod compile_priv_flags_pub_table {
     new_table! {
-        flags { F1, F2 }
+        flags { F1=F1, F2=F2 }
         pub struct Table {
             static data: [u8; 3] = [
                 F1, F1|F2, F2
@@ -73,7 +73,7 @@ mod compile_priv_flags_pub_table {
 }
 mod compile_pubcrate_both {
     new_table! {
-        pub(crate) flags { F1, F2 }
+        pub(crate) flags { F1=F1, F2=F2 }
         pub(crate) struct Table {
             static data: [u8; 3] = [
                 F1, F1|F2, F2
@@ -117,20 +117,20 @@ mod with_attributes {
         //a doc-comment is a attribute, too ;=)
         flags {
             /// document flag
-            F1,
+            Index0=X,
             /// doc that
-            F2
+            Index1=Y
         }
         /// documented
         struct Table {
-            static data: [u8; 2] = [ F1, F2 ];
+            static data: [u8; 2] = [ X, Y ];
         }
     }
 
     merge_tables! {
         /// da new table
         struct Table2 {
-            static data: [u8; 2] = Table { F1 };
+            static data: [u8; 2] = Table { Index0 };
         }
     }
 
@@ -167,11 +167,15 @@ mod handling_of_unexpected_cases {
 //        }
 //    }
 
-    new_table! {
-        flags { F1 }
-        /// A table with a single zero cell
-        struct Table3 {
-            static data: [u8; 1] = [ - ];
+    mod unused_flag {
+        #![allow(dead_code)]
+        
+        new_table! {
+            flags { F1=F1 }
+            /// A table with a single zero cell
+            struct Table3 {
+                static data: [u8; 1] = [ - ];
+            }
         }
     }
 
