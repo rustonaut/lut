@@ -12,6 +12,10 @@ keywords      = [ "lookup", "tables" ]
 [dependencies]
 lazy_static = "0.2"
 
+[features]
+default =  []
+media-type-chars = []
+
 [badges]
 travis-ci = { repository = "1aim/lut", branch = "master" }
 maintenance = { status = "actively-developed" }
