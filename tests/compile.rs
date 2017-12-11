@@ -24,7 +24,7 @@ new_table! {
     pub flags { A11, A12 }
     pub struct Tab1 {
         static data: [u8; 4] = [
-            A11, A11|A12, ,
+            A11, A11|A12, -, -
         ];
     }
 }
@@ -33,7 +33,7 @@ new_table! {
     flags { A21 }
     struct Tab2 {
         static data: [u8; 4] = [
-            A21, , A21,
+            A21, -, A21, -
         ];
     }
 }
@@ -153,7 +153,7 @@ mod handling_of_unexpected_cases {
         flags {}
         /// a table without flags
         struct Table1 {
-            static data: [u8; 2] = [,];
+            static data: [u8; 2] = [-,-];
         }
     }
 
@@ -167,15 +167,13 @@ mod handling_of_unexpected_cases {
 //        }
 //    }
 
-    //[BAD] DOES NOT COMPILE, error: ambiguity: multiple successful parses
-    // but it's ok, empty tables are kinda pointless
-//    new_table! {
-//        flags { F1 }
-//        /// A table with a single zero cell
-//        struct Table3 {
-//            static data: [u8; 1] = [ ];
-//        }
-//    }
+    new_table! {
+        flags { F1 }
+        /// A table with a single zero cell
+        struct Table3 {
+            static data: [u8; 1] = [ - ];
+        }
+    }
 
 
 }

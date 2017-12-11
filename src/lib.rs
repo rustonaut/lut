@@ -80,6 +80,19 @@ impl<H,T> ConstFlagCount for FCSum<H, T>
 
 
 #[derive(Copy, Clone, Debug)]
+pub struct EmptyFlag;
+
+impl<T> Access<T> for EmptyFlag
+    where T: Table
+{
+    #[inline(always)]
+    fn check(&self, _value: T::Value) -> bool {
+        false
+    }
+}
+
+
+#[derive(Copy, Clone, Debug)]
 pub struct NoFlagsSet;
 impl<T> Access<T> for NoFlagsSet
     where T: Table
@@ -110,7 +123,7 @@ macro_rules! new_table {
         pub flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub struct $name:ident {
-            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:tt)|*),*];
         }
     ) => (
         __new_table! {
@@ -123,7 +136,7 @@ macro_rules! new_table {
         pub flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub($($vis:tt)+) struct $name:ident {
-            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:tt)|*),*];
         }
     ) => (
         __new_table! {
@@ -136,7 +149,7 @@ macro_rules! new_table {
         pub flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         struct $name:ident {
-            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:tt)|*),*];
         }
     ) => (
         __new_table! {
@@ -151,7 +164,7 @@ macro_rules! new_table {
         pub($($vis:tt)+) flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub struct $name:ident {
-            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:tt)|*),*];
         }
     ) => (
         __new_table! {
@@ -164,7 +177,7 @@ macro_rules! new_table {
         pub($($fvis:tt)+) flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub($($tvis:tt)+) struct $name:ident {
-            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:tt)|*),*];
         }
     ) => (
         __new_table! {
@@ -177,7 +190,7 @@ macro_rules! new_table {
         pub($($vis:tt)+) flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         struct $name:ident {
-            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:tt)|*),*];
         }
     ) => (
         __new_table! {
@@ -191,7 +204,7 @@ macro_rules! new_table {
         flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub struct $name:ident {
-            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:tt)|*),*];
         }
     ) => (
         __new_table! {
@@ -203,7 +216,7 @@ macro_rules! new_table {
         flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         pub($($vis:tt)+) struct $name:ident {
-            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:tt)|*),*];
         }
     ) => (
         __new_table! {
@@ -215,7 +228,7 @@ macro_rules! new_table {
         flags {$( $(#[$fattr:meta])* $fname:ident ),*}
         $(#[$attr:meta])*
         struct $name:ident {
-            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:ident)|*),*];
+            static $_f:ident: [$tp:ty;$size:tt] = [$($($v:tt)|*),*];
         }
     ) => (
         __new_table! {
@@ -231,7 +244,7 @@ macro_rules! new_table {
 macro_rules! __new_table {
     (
         ($($flag_vis:tt)*) flags [$($(#[$fattr:meta])* $fname:ident),*],
-        ($($table_vis:tt)*) table $(#[$attr:meta])* $name:ident [$tp:ty;$size:tt] = [$($($v:ident)|*),*]
+        ($($table_vis:tt)*) table $(#[$attr:meta])* $name:ident [$tp:ty;$size:tt] = [$($($v:tt)|*),*]
     ) => (
 
         __new_table!{@DEF_FLAGS ($($flag_vis)*) $name [$($(#[$fattr])* $fname),*] [ ]}
@@ -257,7 +270,9 @@ macro_rules! __new_table {
             fn lookup(idx: usize) -> Self::Value {
                 type S = $name;
                 type T = $tp;
-                static TABLE: [$tp;$size] = [$(0$(|<$v as $crate::Flag<S>>::BIT_MASK as T)*),*];
+                static TABLE: [$tp;$size] = [$(
+                    0$(|<__new_table!{@MAP $v} as $crate::Flag<S>>::BIT_MASK as T)*
+                ),*];
                 TABLE[idx]
             }
 
@@ -270,6 +285,13 @@ macro_rules! __new_table {
             fn check_flag_at<A: $crate::Flag<Self>>(idx: usize) -> bool {
                 Self::lookup(idx) & A::BIT_MASK != <Self::Value as $crate::TableValue>::ZERO
             }
+        }
+
+        // workaround for something which looks a lot like a compiler bug
+        // and prevents me from having a wild card implementation for any
+        // table
+        impl $crate::Flag<$name> for $crate::EmptyFlag {
+            const BIT_MASK: $tp = <<$name as $crate::Table>::Value as $crate::TableValue>::ZERO;
         }
     );
     (@DEF_FLAGS ($($flag_vis:tt)*) $t:ident [] [$($inc:tt)*]) => ();
@@ -321,6 +343,8 @@ macro_rules! __new_table {
     (@COUNT [$head:ident $(, $tail:ident)*] [$($inc:tt)*]) => (
         __new_table!{@COUNT [$($tail),*] [$($inc)* 1]}
     );
+    (@MAP -) => ($crate::EmptyFlag);
+    (@MAP $v:tt) => ($v);
 }
 
 /// # Example
@@ -696,7 +720,7 @@ mod test {
         flags { A11, A12 }
         struct Tab1 {
             static data: [u8; 4] = [
-                A11, A11|A12, ,
+                A11, A11|A12, -, -
             ];
         }
     }
@@ -705,7 +729,7 @@ mod test {
         flags { A21 }
         struct Tab2 {
             static data: [u8; 4] = [
-                A21, , A21,
+                A21, -, A21, -
             ];
         }
     }
@@ -714,7 +738,7 @@ mod test {
         flags { A31 }
         struct Tab3 {
             static data: [u8; 4] = [
-                A31, , , A31
+                A31, -, -, A31
             ];
         }
     }
