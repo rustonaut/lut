@@ -61,6 +61,7 @@ pub trait Table: Sized + ConstFlagCount {
         }
     }
 
+    #[doc(hidden)]
     fn check_flag_at<A: Flag<Self>>(idx: usize) -> bool;
 }
 
