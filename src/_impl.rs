@@ -52,6 +52,15 @@ pub trait Table: Sized + ConstFlagCount {
 
     fn check_at<A: Access<Self>>(idx: usize, accessor: A) -> bool;
 
+    #[inline(always)]
+    fn unbound_check_at<A: Access<Self>>(idx: usize, accessor: A) -> bool {
+        if idx > Self::len() {
+            false
+        } else {
+            Self::check_at(idx, accessor)
+        }
+    }
+
     fn check_flag_at<A: Flag<Self>>(idx: usize) -> bool;
 }
 
