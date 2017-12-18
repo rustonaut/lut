@@ -21,21 +21,20 @@ pub mod media_type_chars {
     new_table! {
 
         pub flags {
-            //NOTE: CText _has to_ be the first flag getting index 1
             /// CText
             CText = CT,
             /// ObsNoWsCtl
             ObsNoWsCtl = NC,
             /// Rfc7230Token
-            Rfc7230Token = HT,
+            HttpToken = HT,
             /// Token
             Token = TO,
             /// Restricted Token
             RestrictedToken = RT,
             /// QText
             QText = QC,
-            /// OtherObsQP  obs-quoted-pair chars not in other classes (\0, \r, \n)
-            OtherObsQP = OOQP,
+            /// The characters mainly needing escaping i.e. '"' and '\\'
+            DQuoteOrEscape = DOE,
             /// Ws  (\t and \r)
             Ws = Ws
         }
@@ -44,17 +43,17 @@ pub mod media_type_chars {
         pub struct MediaTypeChars {
             static data: [u8; 256] = [
                 //0x00 + 0/4/8/C
-                OOQP,            NC,              NC,              NC,
+                -,               NC,              NC,              NC,
                 NC,              NC,              NC,              NC,
-                NC,              Ws,              OOQP,            NC,
-                NC,              OOQP,            NC,              NC,
+                NC,              Ws,              -,               NC,
+                NC,              -,               NC,              NC,
                 //0x10  + 0/4/8/C
                 NC,              NC,              NC,              NC,
                 NC,              NC,              NC,              NC,
                 NC,              NC,              NC,              NC,
                 NC,              NC,              NC,              NC,
                 //0x20 + 0/4/8/C
-                Ws,              CT|QC|RT|TO|HT,  CT,              CT|QC|RT|TO|HT,
+                Ws,              CT|QC|RT|TO|HT,  CT|DOE,          CT|QC|RT|TO|HT,
                 CT|QC|RT|TO|HT,  CT|QC|TO|HT,     CT|QC|RT|TO|HT,  CT|QC|TO|HT,
                 QC,              QC,              CT|QC|TO|HT,     CT|QC|RT|TO|HT,
                 CT|QC,           CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC,
@@ -72,7 +71,7 @@ pub mod media_type_chars {
                 CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
                 CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
                 CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC,
-                -,/*'\\'*/       CT|QC,           CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
+                DOE,/*'\\'*/     CT|QC,           CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
                 //0x60 + 0/4/8/C
                 CT|QC|TO|HT,     CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
                 CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,  CT|QC|RT|TO|HT,
@@ -102,67 +101,11 @@ pub mod media_type_chars {
             ];
         }
     }
-
-    /// given a char is us-ascii true is returned lookup_result passed in came from looking up '"' or '\\'
-    ///
-    /// If a lookup result from a non-us-ascii character is passed in this function will always
-    /// return true.
-    ///
-    /// # Implementation Details
-    ///
-    /// It works by taking advantage that:
-    ///
-    /// 1. CText is defined as the first flag having the mask repr 0b0000001
-    /// 2. '"' is the only char which is only allowed in CText
-    /// 3. '\\' is the only _us-ascii_ char whichs lookup result is 0
-    ///
-    /// As such if the char is known to be us-ascci and the lookup result is <=1 it is either
-    /// '"' or '\\'
     #[cfg(feature = "media-type-chars")]
-    #[inline(always)]
-    pub fn is_dquote_or_escape_given_ascii(lookup_result: u8) -> bool {
-        lookup_result <= 1
-    }
-
+    accessor_any!{ pub QTextWs = QText | Ws }
     #[cfg(feature = "media-type-chars")]
-    #[cfg(test)]
-    mod test {
-        use ::{Flag, Table};
-        use super::{is_dquote_or_escape_given_ascii, CText, MediaTypeChars};
+    accessor_any!{ pub ObsQText = QText | ObsNoWsCtl }
+    #[cfg(feature = "media-type-chars")]
+    accessor_any!{ pub VChar = QText | DQuoteOrEscape }
 
-        #[test]
-        fn ctext_has_mask_1() {
-            assert_eq!(<CText as Flag<MediaTypeChars>>::BIT_MASK, 0b0000001);
-        }
-
-        #[test]
-        fn only_escape_has_lookup_result_0_in_us_ascii() {
-            for x in 0..128 {
-                if x != '\\' as usize {
-                    assert_ne!(MediaTypeChars::lookup(x), 0)
-                }
-            }
-        }
-
-        #[test]
-        fn only_dequotes_have_lookup_result_1() {
-            for x in 0..128 {
-                if x != '"' as usize {
-                    assert_ne!(MediaTypeChars::lookup(x), 1)
-                }
-            }
-        }
-
-        #[test]
-        fn escape_dequotes_lt_1() {
-            for x in 0..128 {
-                let res = MediaTypeChars::lookup(x);
-                if x == '"' as usize || x == '\\' as usize {
-                    assert!(is_dquote_or_escape_given_ascii(res));
-                } else {
-                    assert!(!is_dquote_or_escape_given_ascii(res));
-                }
-            }
-        }
-    }
 }
