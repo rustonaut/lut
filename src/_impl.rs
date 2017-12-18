@@ -342,6 +342,12 @@ macro_rules! __new_table {
             }
         }
 
+        impl ::std::default::Default for $head {
+            fn default() -> Self {
+                $head
+            }
+        }
+
         __new_table!{@DEF_FLAGS ($($flag_vis)*) $table [$($tail),*] [$($inc)* 1]}
     );
     (@COUNT [] [$($inc:tt)*]) => (
@@ -673,6 +679,11 @@ macro_rules! accessor_all {
                 value & mask == mask
             }
         }
+        impl ::std::default::Default for $name {
+            fn default() -> Self {
+                $name
+            }
+        }
     )
 }
 
@@ -703,6 +714,12 @@ macro_rules! accessor_any {
             fn check(&self, value: T::Value) -> bool {
                 let mask: T::Value = $(<$subname as $crate::Flag<T>>::BIT_MASK)|*;
                 value & mask != <T::Value as $crate::TableValue>::ZERO
+            }
+        }
+
+        impl ::std::default::Default for $name {
+            fn default() -> Self {
+                $name
             }
         }
     )
