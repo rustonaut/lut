@@ -106,6 +106,10 @@ pub mod media_type_chars {
     #[cfg(feature = "media-type-chars")]
     accessor_any!{ pub ObsQText = QText | ObsNoWsCtl }
     #[cfg(feature = "media-type-chars")]
+    accessor_any!{ pub ObsQTextWs = QText | ObsNoWsCtl }
+    #[cfg(feature = "media-type-chars")]
     accessor_any!{ pub VChar = QText | DQuoteOrEscape }
+    #[cfg(feature = "media-type-chars")]
+    accessor_any!{ pub VCharWs = QText | DQuoteOrEscape | Ws }
 
 }
