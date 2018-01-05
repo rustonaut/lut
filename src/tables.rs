@@ -27,7 +27,7 @@ pub mod media_type_chars {
             ObsNoWsCtl = NC,
             /// Rfc7230Token
             HttpToken = HT,
-            /// Token
+            /// Token (Mime)
             Token = TO,
             /// Restricted Token
             RestrictedToken = RT,
