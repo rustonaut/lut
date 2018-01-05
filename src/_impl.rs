@@ -689,23 +689,24 @@ macro_rules! accessor_all {
 
 #[macro_export]
 macro_rules! accessor_any {
-    (pub $name:ident = $($subname:ident)|+) => (
+    ($(#[$attr:meta])* pub $name:ident = $($subname:ident)|+) => (
         accessor_any!{ @IMPL
-            (pub) $name = $($subname)|+
+            $(#[$attr])* (pub) $name = $($subname)|+
         }
     );
-    (pub($($vis:tt)*) $name:ident = $($subname:ident)|+) => (
+    ($(#[$attr:meta])* pub($($vis:tt)*) $name:ident = $($subname:ident)|+) => (
         accessor_any!{ @IMPL
-            (pub($($vis)*)) $name = $($subname)|+
+            $(#[$attr])* (pub($($vis)*)) $name = $($subname)|+
         }
     );
-    ($name:ident = $($subname:ident)|+) => (
+    ($(#[$attr:meta])* $name:ident = $($subname:ident)|+) => (
         accessor_any!{ @IMPL
-            () $name = $($subname)|+
+            $(#[$attr])* () $name = $($subname)|+
         }
     );
-    (@IMPL ($($vis:tt)*) $name:ident = $($subname:ident)|+) => (
+    (@IMPL $(#[$attr:meta])* ($($vis:tt)*) $name:ident = $($subname:ident)|+) => (
         #[derive(Copy, Clone, Debug)]
+        $(#[$attr])*
         $($vis)* struct $name;
         impl<T: $crate::Table> $crate::Access<T> for $name
                   where $($subname: $crate::Flag<T>),*
