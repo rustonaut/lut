@@ -348,7 +348,7 @@ macro_rules! __new_table {
             }
         }
 
-        __new_table!{@DEF_FLAGS ($($flag_vis)*) $table [$($tail),*] [$($inc)* 1]}
+        __new_table!{@DEF_FLAGS ($($flag_vis)*) $table [$( $(#[$tattr])* $tail),*] [$($inc)* 1]}
     );
     (@COUNT [] [$($inc:tt)*]) => (
         $($inc +)* 0;
