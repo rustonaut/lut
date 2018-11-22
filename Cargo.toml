@@ -1,6 +1,6 @@
 [package]
 name = "lut"
-version = "0.1.0"
+version = "0.1.0-unstable"
 authors = ["Philipp Korber <p.korber@1aim.com>"]
 license = "MIT/Apache-2.0"
 description   = "provides lookup tables and helps with constructstructing (and merging) more of them"
